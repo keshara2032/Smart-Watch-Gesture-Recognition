@@ -23,9 +23,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SensorData  implements SensorEventListener {
 
     private SensorManager sensorManager;
-    private Sensor sensor;
+    private Sensor sensor_acc;
+    private Sensor sensor_mag;
     private double avg = 0;
     private String acc_data;
+    private String game_rotation_vector;
     private static final double P = 0.7;
     protected static final String LOG_TAG = "SensorData";
     private Context context;
@@ -58,30 +60,53 @@ public class SensorData  implements SensorEventListener {
     public SensorData(Context context) {
         this.context = context;
         sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Log.d(LOG_TAG, "Sensors" + sensor);
-        sensorManager.registerListener(this,
-                sensor, SensorManager.SENSOR_DELAY_FASTEST);
+        sensor_acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensor_mag = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        Log.d(LOG_TAG, "Sensors" + sensor_acc);
+        sensorManager.registerListener(this, sensor_acc, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, sensor_mag, SensorManager.SENSOR_DELAY_FASTEST);
 
     }
 
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        // Acquire measurement values from event
-        double x = sensorEvent.values[0]; // X axis
-        double y = sensorEvent.values[1]; // y axis
-        double z = sensorEvent.values[2]; // z axis
 
-        // Do something with the values
 
-        // Calculate exponential average
-        avg = avg * (1 - P) + x * P;
+        Sensor sensor = sensorEvent.sensor;
+        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            //TODO: get values
 
-        acc_data = Double.toString(x) +","+Double.toString(y) + ","+Double.toString(z);
-        Log.d(LOG_TAG, "acc_3_axes: " + acc_data);
+            // Acquire measurement values from event
+            double x = sensorEvent.values[0]; // X axis
+            double y = sensorEvent.values[1]; // y axis
+            double z = sensorEvent.values[2]; // z axis
 
-        sendSensorData(acc_data);
+            // Do something with the values
+
+            // Calculate exponential average
+            avg = avg * (1 - P) + x * P;
+
+            acc_data = x +","+ y + ","+ z;
+            Log.d(LOG_TAG, "acc_3_axes: " + acc_data);
+
+
+        }else if (sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR) {
+            //TODO: get values
+            // Acquire measurement values from event
+            double x = sensorEvent.values[0]; // X
+            double y = sensorEvent.values[1]; // y
+            double z = sensorEvent.values[2]; // z
+
+            game_rotation_vector  = x +","+ y + ","+ z;
+
+            Log.d(LOG_TAG, "magnetic_field: "+game_rotation_vector);
+
+        }
+
+        String data_to_send = acc_data+","+game_rotation_vector;
+        sendSensorData(data_to_send);
+
 
 
     }
